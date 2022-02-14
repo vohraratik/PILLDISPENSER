@@ -1,0 +1,115 @@
+
+#include <LiquidCrystal.h>
+
+// initialize the library with the numbers of the interface pins
+LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+
+int i, j;
+int x=0;
+#include <Servo.h>
+
+Servo myservo;  // create servo object to control a servo
+// twelve servo objects can be created on most boards
+Servo myservo1;
+int pos = 95; 
+// Date and time functions using a DSA307 RTC connected via I2C and Wire lib
+#include <Wire.h>
+#include <RTClib.h>
+
+RTC_DS1307 rtc;
+
+// this runs once
+void setup() {                
+  // initialize the digital pin as an output.
+   lcd.begin(16, 2);
+lcd.setCursor(0, 0);
+ lcd.print("RTC medicine");
+ lcd.setCursor(0, 1);
+ lcd.print("");
+ delay(2000);
+ lcd.clear();
+analogReference(DEFAULT);
+  // enable debug serial
+  Serial.begin(9600);
+
+
+ 
+myservo.attach(A0);
+myservo1.attach(A1);
+myservo1.write(90);// for right max
+myservo.write(95);
+
+
+
+
+if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
+
+  if (! rtc.isrunning()) {
+    Serial.println("RTC is NOT running!");
+    // following line sets the RTC to the date & time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // This line sets the RTC with an explicit date & time, for example to set
+    // october 21, 2021 at 3am you would call:
+    // rtc.adjust(DateTime(2021, 1, 21, 3, 0, 0));
+  }
+}
+// the loop
+void loop() {
+   //Serial.println(analogRead(A3));
+    DateTime now = rtc.now();
+    
+   
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.println();
+lcd.setCursor(0, 0);
+ lcd.print("Pill Dispenser");
+lcd.setCursor(0, 1);
+ lcd.print("Time: ");
+ lcd.print(now.hour());
+  lcd.print(":");
+   lcd.print(now.minute());
+     lcd.print("  ");
+   
+    if(now.second()%2 == 0 && x==1)
+    {
+      x=0;
+       myservo1.write(90);// for right max
+       delay(1000);
+        for (pos = 95; pos >= 15; pos -= 1)  { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(30);                       // waits 15ms for the servo to reach the position
+  }
+  delay(1000);
+   for (pos = 15; pos <= 95; pos += 1)  { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(30);                       // waits 15ms for the servo to reach the position
+  }
+    }
+    if(now.second()%2 != 0 && x==0)
+    {
+      x=1;
+      myservo1.write(70);// for left max
+      delay(1000);
+      for (pos = 95; pos >= 15; pos -= 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(30);                       // waits 15ms for the servo to reach the position
+  }
+   delay(1000);
+   for (pos = 15; pos <= 95; pos += 1)  { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(30);                       // waits 15ms for the servo to reach the position
+  }
+    }
+   
+
+}
